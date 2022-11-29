@@ -1,6 +1,17 @@
 import { createStore } from "vuex";
 import axiosClient from "../axios";
 
+const tmpSurveys = [
+    {
+        id:100,
+        title:'Learning-Project',
+        slug:'learning-project',
+        status:'draft',
+        image:'https://dummyimage.com/640x360/fff/aaa',
+        status:'draft',
+    }
+];
+
 const store = createStore({
     state: {
         user: {
