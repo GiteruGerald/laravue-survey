@@ -215,8 +215,10 @@ const router = useRouter();
 
 
 const logout = (()=>{
-  store.commit('logout');
-  router.push({name:'Login'})
+  store.dispatch('logout')
+    .then(()=>{
+      router.push({name:'Login'})
+    })
 })
 const user = computed(() => store.state.user.data);
 const navigation = [

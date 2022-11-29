@@ -42,6 +42,13 @@ const store = createStore({
                 })
 
         },
+        logout({commit}){
+            return axiosClient.post('/logout')
+                .then(response =>{
+                    commit('logout');
+                    return response;
+                })
+        }
     },
     mutations: {
         logout: (state) =>{
