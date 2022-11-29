@@ -1,7 +1,7 @@
 <template>
-  <h1>All surveys</h1>
+  <PageComponentVue title="Surveys"> Content goes Here </PageComponentVue>
 </template>
   
   <script setup>
-  
-  </script>
+import PageComponentVue from "../components/PageComponent.vue";
+</script>
