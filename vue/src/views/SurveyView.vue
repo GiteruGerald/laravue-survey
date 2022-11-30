@@ -390,10 +390,10 @@ const saveSurvey = () => {
     action = "updated";
   }
   store.dispatch("saveSurvey", { ...model.value }).then(({ data }) => {
-    // store.commit("notify", {
-    //   type: "success",
-    //   message: "The survey was successfully " + action,
-    // });
+    store.commit("notify", {
+      type: "success",
+      message: "The survey was successfully " + action,
+    });
     router.push({
       name: "SurveyView",
       params: { id: data.data.id },

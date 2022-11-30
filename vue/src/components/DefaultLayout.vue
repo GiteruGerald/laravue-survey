@@ -192,6 +192,8 @@
     </Disclosure>
 
     <router-view></router-view>
+    
+    <NotificationVue />
   </div>
 </template>
   
@@ -206,6 +208,7 @@ import {
   MenuItems,
 } from "@headlessui/vue";
 import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/vue/24/outline";
+import NotificationVue from "./Notification.vue";
 import { computed } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";

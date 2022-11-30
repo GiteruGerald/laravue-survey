@@ -119,7 +119,7 @@ class SurveyController extends Controller
             foreach ($survey->questions as $question) {
                 if (isset($questionMap[$question->id])) {
                     $this->updateQuestion($question, $questionMap[$question->id]);
-                }
+            }
             }
 
             return new SurveyResource($survey);
