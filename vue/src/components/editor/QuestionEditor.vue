@@ -132,7 +132,7 @@
         </option>
       </select>
     </div>
-    <!--/ Question Type -->
+    <!-- Question Type -->
   </div>
   <!-- Question Description -->
   <div class="mt-3 col-span-9">
@@ -158,7 +158,7 @@
       "
     />
   </div>
-  <!--/ Question Description -->
+  <!-- Question Description -->
   <!-- Data -->
   <div>
     <div v-if="shouldHaveOptions()" class="mt-2">
@@ -301,7 +301,8 @@ const shouldHaveOptions = ()=> {
 const addOption = () =>{
   setOptions([
     ...getOptions(),
-    { uuid: uuidv4(), text: "" },
+    { uuid: uuidv4(),
+       text: "" },
   ]);
   dataChange();
 }
