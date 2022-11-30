@@ -206,7 +206,17 @@
             <button
               type="button"
               @click="addQuestion()"
-              class="flex items-center text-sm py-1 px-4 rounded-sm text-white bg-gray-600 hover:bg-gray-700"
+              class="
+                flex
+                items-center
+                text-sm
+                py-1
+                px-4
+                rounded-sm
+                text-white
+                bg-gray-600
+                hover:bg-gray-700
+              "
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -271,12 +281,14 @@
 <script setup>
 import { ref } from "vue";
 import store from "../store";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
 import PageComponentVue from "../components/PageComponent.vue";
-import QuestionEditor from "../components/editor/QuestionEditor.vue"; 
+import QuestionEditor from "../components/editor/QuestionEditor.vue";
 
 const route = useRoute();
+const router = useRouter();
+
 
 let model = ref({
   title: "",
@@ -289,8 +301,9 @@ let model = ref({
 });
 
 if (route.params.id) {
-  model.value =
-    store.state.surveys.find((s) => s.id === parseInt(route.params.id));
+  model.value = store.state.surveys.find(
+    (s) => s.id === parseInt(route.params.id)
+  );
 }
 
 const addQuestion = (index) => {
@@ -303,13 +316,13 @@ const addQuestion = (index) => {
   };
 
   model.value.questions.splice(index, 0, newQuestion);
-}
+};
 
 const deleteQuestion = (question) => {
   model.value.questions = model.value.questions.filter((q) => q !== question);
-}
+};
 
-const questionChange = (question)=> {
+const questionChange = (question) => {
   // Important to explicitly assign question.data.options, because otherwise it is a Proxy object
   // and it is lost in JSON.stringify()
   if (question.data.options) {
@@ -321,5 +334,36 @@ const questionChange = (question)=> {
     }
     return q;
   });
-}
+};
+
+const saveSurvey = () => {
+  let action = "created";
+  if (model.value.id) {
+    action = "updated";
+  }
+  store.dispatch("saveSurvey", { ...model.value }).then(({ data }) => {
+    // store.commit("notify", {
+    //   type: "success",
+    //   message: "The survey was successfully " + action,
+    // });
+    router.push({
+      name: "SurveyView",
+      params: { id: data.data.id },
+    });
+  });
+};
+
+const deleteSurvey = () => {
+  if (
+    confirm(
+      `Are you sure you want to delete this survey? Operation can't be undone!!`
+    )
+  ) {
+    store.dispatch("deleteSurvey", model.value.id).then(() => {
+      router.push({
+        name: "Surveys",
+      });
+    });
+  }
+};
 </script>
