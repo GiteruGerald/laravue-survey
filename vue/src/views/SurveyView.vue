@@ -3,11 +3,33 @@
     <template v-slot:header>
       <div class="flex items-center justify-between">
         <h1 class="text-3xl font-bold text-gray-900">
-          {{ model.id ? model.title : "Create a Survey" }}
+          {{ route.params.id ? model.title : "Create a Survey" }}
         </h1>
+        <button
+            v-if="route.params.id"
+            type="button"
+            @click="deleteSurvey()"
+            class="py-2 px-3 text-white bg-red-500 rounded-md hover:bg-red-600"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 -mt-1 inline-block"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            Delete Survey
+          </button>
       </div>
+      
     </template>
-    <form @submit.prevent="saveSurvey">
+    <div v-if="surveyLoading" class="flex justify-center">Loading...</div>
+    <form v-else @submit.prevent="saveSurvey" class="animate-fade-in-down">
       <div class="shadow sm:rounded-md sm:overflow-hidden">
         <!-- Survey Fields -->
         <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
@@ -18,8 +40,8 @@
             </label>
             <div class="mt-1 flex items-center">
               <img
-                v-if="model.image"
-                :src="model.image"
+                v-if="model.image_url"
+                :src="model.image_url"
                 :alt="model.title"
                 class="w-64 h-48 object-cover"
               />
@@ -279,7 +301,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { computed, ref, watch } from "vue";
 import store from "../store";
 import { useRoute, useRouter } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
@@ -289,21 +311,32 @@ import QuestionEditor from "../components/editor/QuestionEditor.vue";
 const route = useRoute();
 const router = useRouter();
 
-
+const surveyLoading = computed(()=> store.state.currentSurvey.loading);
 let model = ref({
   title: "",
   status: false,
   image: null,
+  image_url: null,
   status: "",
   description: null,
   expire_date: null,
   questions: [],
 });
 
+watch(
+  () => store.state.currentSurvey.data,
+  (newVal, oldVal) => {
+    model.value = {
+      ...JSON.parse(JSON.stringify(newVal)),
+      status: newVal.status !== "draft",
+    };
+  }
+);
+
+// If the current component is rendered on survey update route we make a request to fetch survey
 if (route.params.id) {
-  model.value = store.state.surveys.find(
-    (s) => s.id === parseInt(route.params.id)
-  );
+  store.dispatch("getSurvey", route.params.id);
+
 }
 
 const addQuestion = (index) => {
@@ -335,6 +368,21 @@ const questionChange = (question) => {
     return q;
   });
 };
+
+const onImageChoose = (ev) => {
+  const file = ev.target.files[0];
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    // The field to send on backend and apply validations
+    model.value.image = reader.result;
+
+    // The field to display here
+    model.value.image_url = reader.result;
+    ev.target.value = "";
+  };
+  reader.readAsDataURL(file);
+}
 
 const saveSurvey = () => {
   let action = "created";
