@@ -194,6 +194,10 @@ const store = createStore({
             data: {},
             token: sessionStorage.getItem("TOKEN"),
         },
+        dashboard: {
+            loading: false,
+            data: {},
+        },
         currentSurvey: {
             loading: false,
             data: {},
@@ -212,6 +216,20 @@ const store = createStore({
     },
     getters: {},
     actions: {
+        getDashboardData({ commit }) {
+            commit("dashboardLoading", true);
+            return axiosClient
+                .get(`/dashboard`)
+                .then((res) => {
+                    commit("dashboardLoading", false);
+                    commit("setDashboardData", res.data);
+                    return res;
+                })
+                .catch((error) => {
+                    commit("dashboardLoading", false);
+                    return error;
+                });
+        },
         getSurvey({ commit }, id) {
             commit("setCurrentSurveyLoading", true);
             return axiosClient
@@ -237,16 +255,17 @@ const store = createStore({
         },
         getSurveyBySlug({ commit }, slug) {
             commit("setCurrentSurveyLoading", true);
-            return axiosClient.get(`/survey-by-slug/${slug}`)
-            .then((res) => {
-                commit("setCurrentSurvey", res.data);
-                commit("setCurrentSurveyLoading", false);
-                return res;
-            })
-            .catch((err)=>{
-                commit("setCurrentSurveyLoading", false);
-                throw err;
-            });
+            return axiosClient
+                .get(`/survey-by-slug/${slug}`)
+                .then((res) => {
+                    commit("setCurrentSurvey", res.data);
+                    commit("setCurrentSurveyLoading", false);
+                    return res;
+                })
+                .catch((err) => {
+                    commit("setCurrentSurveyLoading", false);
+                    throw err;
+                });
         },
         saveSurvey({ commit }, survey) {
             delete survey.image_url;
@@ -267,9 +286,9 @@ const store = createStore({
             }
             return response;
         },
-        saveSurveyAnswer({commit}, {surveyId, answers}) {
-            return axiosClient.post(`/survey/${surveyId}/answer`, {answers});
-          },
+        saveSurveyAnswer({ commit }, { surveyId, answers }) {
+            return axiosClient.post(`/survey/${surveyId}/answer`, { answers });
+        },
         deleteSurvey({ dispatch }, id) {
             return axiosClient.delete(`/survey/${id}`).then((res) => {
                 dispatch("getSurveys");
@@ -333,6 +352,12 @@ const store = createStore({
         //         return s;
         //     });
         // },
+        dashboardLoading: (state, loading) => {
+            state.dashboard.loading = loading;
+        },
+        setDashboardData: (state, data) => {
+            state.dashboard.data = data
+          },
         setCurrentSurveyLoading: (state, loading) => {
             state.currentSurvey.loading = loading;
         },
