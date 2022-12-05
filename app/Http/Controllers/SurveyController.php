@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreSurveyAnswerRequest;
 use App\Models\Survey;
 use App\Http\Requests\StoreSurveyRequest;
 use App\Http\Requests\UpdateSurveyRequest;
 use App\Http\Resources\SurveyResource;
+use App\Models\SurveyAnswer;
 use App\Models\SurveyQuestion;
+use App\Models\SurveyQuestionAnswer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
@@ -24,7 +27,7 @@ class SurveyController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        return SurveyResource::collection(Survey::where('user_id', $user->id)->orderBy('created_at', 'DESC')->paginate(4));
+        return SurveyResource::collection(Survey::where('user_id', $user->id)->orderBy('created_at', 'DESC')->paginate(10));
     }
 
     /**
@@ -69,6 +72,13 @@ class SurveyController extends Controller
         return new SurveyResource($survey);
     }
 
+
+    public function showForGuest(Survey $survey)
+    {
+
+
+        return new SurveyResource($survey);
+    }
     /**
      * Update the specified resource in storage.
      *
@@ -92,40 +102,66 @@ class SurveyController extends Controller
                 File::delete($absolutePath);
             }
         }
-            // Update survey in the database
-            $survey->update($data);
-            // Get ids as plain array of existing questions
-            $existingIds = $survey->questions()->pluck('id')->toArray();
-            // Get ids as plain array of new questions
-            $newIds = Arr::pluck($data['questions'], 'id');
-            // Find questions to delete
-            $toDelete = array_diff($existingIds, $newIds);
-            //Find questions to add
-            $toAdd = array_diff($newIds, $existingIds);
+        // Update survey in the database
+        $survey->update($data);
+        // Get ids as plain array of existing questions
+        $existingIds = $survey->questions()->pluck('id')->toArray();
+        // Get ids as plain array of new questions
+        $newIds = Arr::pluck($data['questions'], 'id');
+        // Find questions to delete
+        $toDelete = array_diff($existingIds, $newIds);
+        //Find questions to add
+        $toAdd = array_diff($newIds, $existingIds);
 
-            // Delete questions by $toDelete array
-            SurveyQuestion::destroy($toDelete);
+        // Delete questions by $toDelete array
+        SurveyQuestion::destroy($toDelete);
 
-            // Create new questions
-            foreach ($data['questions'] as $question) {
-                if (in_array($question['id'], $toAdd)) {
-                    $question['survey_id'] = $survey->id;
-                    $this->createQuestion($question);
-                }
+        // Create new questions
+        foreach ($data['questions'] as $question) {
+            if (in_array($question['id'], $toAdd)) {
+                $question['survey_id'] = $survey->id;
+                $this->createQuestion($question);
             }
-
-            // Update existing questions
-            $questionMap = collect($data['questions'])->keyBy('id');
-            foreach ($survey->questions as $question) {
-                if (isset($questionMap[$question->id])) {
-                    $this->updateQuestion($question, $questionMap[$question->id]);
-            }
-            }
-
-            return new SurveyResource($survey);
         }
-        
-    
+
+        // Update existing questions
+        $questionMap = collect($data['questions'])->keyBy('id');
+        foreach ($survey->questions as $question) {
+            if (isset($questionMap[$question->id])) {
+                $this->updateQuestion($question, $questionMap[$question->id]);
+            }
+        }
+
+        return new SurveyResource($survey);
+    }
+
+    public function storeAnswer(StoreSurveyAnswerRequest $storeSurveyAnswerRequest, Survey $survey)
+    {
+        $validated = $storeSurveyAnswerRequest->validated();
+//        var_dump($validated, $survey);
+
+        $surveyAnswer = SurveyAnswer::create([
+            'survey_id' => $survey->id,
+            'start_date' => date('Y-m-d H:i:s'),
+            'end_date' => date('Y-m-d H:i:s'),
+        ]);
+        foreach ($validated['answers'] as $questionId => $answer) {
+            $question = SurveyQuestion::where(['id' => $questionId, 'survey_id' => $survey->id])->get();
+            if (!$question) {
+                return response("Invalid question ID: \"$questionId\"", 400);
+            }
+
+            $data = [
+                'survey_question_id' => $questionId,
+                'survey_answer_id' => $surveyAnswer->id,
+                'answer' => is_array($answer) ? json_encode($answer) : $answer
+            ];
+
+            $questionAnswer = SurveyQuestionAnswer::create($data);
+        }
+
+        return response("", 201);
+    }
     /**
      * Remove the specified resource from storage.
      *

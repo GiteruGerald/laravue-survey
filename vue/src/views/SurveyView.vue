@@ -398,7 +398,13 @@ const saveSurvey = () => {
       name: "SurveyView",
       params: { id: data.data.id },
     });
-  });
+  })
+  .catch(()=>{
+    store.commit("notify", {
+      type: "error",
+      message: "Error adding survey details",
+    });
+  })
 };
 
 const deleteSurvey = () => {
