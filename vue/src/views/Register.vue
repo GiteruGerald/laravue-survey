@@ -21,12 +21,22 @@
     </p>
   </div>
   <form class="mt-8 space-y-6" @submit="register">
+    <Alert
+      v-if="Object.keys(errors).length"
+      class="flex-col items-stretch text-sm"
+    >
+      <div v-for="(field, i) of Object.keys(errors)" :key="i">
+        <div v-for="(error, ind) of errors[field] || []" :key="ind">
+          * {{ error }}
+        </div>
+      </div>
+    </Alert>
     <input type="hidden" name="remember" value="true" />
     <div class="-space-y-px rounded-md shadow-sm">
       <div>
         <label for="fullname" class="sr-only">Name</label>
         <input
-        v-model="user.name"
+          v-model="user.name"
           id="fullname"
           name="name"
           type="text"
@@ -55,7 +65,7 @@
       <div>
         <label for="email-address" class="sr-only">Email address</label>
         <input
-        v-model="user.email"
+          v-model="user.email"
           id="email-address"
           name="email"
           type="email"
@@ -84,7 +94,7 @@
       <div>
         <label for="password" class="sr-only">Password</label>
         <input
-        v-model="user.password"
+          v-model="user.password"
           id="password"
           name="password"
           type="password"
@@ -115,7 +125,7 @@
           >Password Confirmation</label
         >
         <input
-        v-model="user.password_confirmation"
+          v-model="user.password_confirmation"
           id="password_confirmation"
           name="password-confirmation"
           type="password"
@@ -145,6 +155,7 @@
 
     <div>
       <button
+      :disabled="loading"
         type="submit"
         class="
           group
@@ -166,6 +177,10 @@
           focus:ring-indigo-500
           focus:ring-offset-2
         "
+        :class="{
+          'cursor-not-allowed': loading,
+          'hover:bg-indigo-500': loading,
+        }"
       >
         <span class="absolute inset-y-0 left-0 flex items-center pl-3">
           <LockClosedIcon
@@ -173,6 +188,27 @@
             aria-hidden="true"
           />
         </span>
+        <svg
+          v-if="loading"
+          class="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          ></circle>
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          ></path>
+        </svg>
         Sign Up
       </button>
     </div>
@@ -181,8 +217,10 @@
   
   <script setup>
 import { LockClosedIcon } from "@heroicons/vue/20/solid";
+import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
+import Alert from "../components/Alert.vue";
 
 const store = useStore();
 const router = useRouter();
@@ -193,15 +231,27 @@ const user = {
   password_confirmation: "",
 };
 
+const loading = ref(false);
+
+const errors = ref({});
+
 const register = (ev) => {
   ev.preventDefault();
-  store.dispatch('register', user)
-      .then((res)=>{
-        router.push({name:'Dashboard'})
-      })
-      // .catch((er)=>{
-      //   router.go(-1);
-      // })
+  loading.value = true;
+
+  store
+    .dispatch("register", user)
+    .then((res) => {
+      loading.value = false;
+
+      router.push({ name: "Dashboard" });
+    })
+    .catch((error) => {
+      loading.value = false;
+      if (error.response.status === 422) {
+        errors.value = error.response.data.errors;
+      }
+    });
 };
 </script>
   
