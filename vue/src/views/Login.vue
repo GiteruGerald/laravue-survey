@@ -21,9 +21,14 @@
     </p>
   </div>
   <form class="mt-8 space-y-6" @submit="login">
-    <Alert v-if="errorMsg">
-      {{ errorMsg }}
-      <span
+    <Alert v-if="Object.keys(errorMsg).length"
+    >
+    <div v-for="(field, i) of Object.keys(errorMsg)" :key="i">
+        <div v-for="(error, ind) of errorMsg[field] || []" :key="ind">
+          * {{ error }}
+        </div>
+        
+      </div>      <span
         @click="errorMsg = ''"
         class="w-8 h-8 flex items-center justify-center rounded-full transition-colors cursor-pointer hover:bg-[rgba(0,0,0,0.2)]"
       >
@@ -43,6 +48,7 @@
         </svg>
       </span>
     </Alert>
+
 
     <input type="hidden" name="remember" value="true" />
     <div class="-space-y-px rounded-md shadow-sm">
@@ -200,7 +206,7 @@ import { useStore } from "vuex";
 const store = useStore();
 const router = useRouter();
 
-let errorMsg = ref("");
+const errorMsg = ref({});
 
 const user = {
   email: "",
@@ -209,6 +215,8 @@ const user = {
 };
 
 const loading = ref(false);
+
+
 const login = (ev) => {
   ev.preventDefault();
 
@@ -222,7 +230,11 @@ const login = (ev) => {
     .catch((err) => {
       loading.value = false;
 
-      errorMsg.value = err.response.data.error;
+      if (err.response.status === 422) {
+        // errors.value = error.response.data.errors;
+        errorMsg.value = err.response.data.errors;
+        console.log(errorMsg.value)
+      }
     });
 };
 </script>
