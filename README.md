@@ -21,9 +21,8 @@ You need to have PHP version **8.0** or above. Node.js version **8.5** or above.
 #### Frontend
 1. Navigate to `vue` folder using terminal
 2. Run `npm install` to install vue.js project dependencies
-3. Copy `vue/.env.example` into `vue/.env` and specify API URL
-4. Start frontend by running `npm run dev`
-5. Open http://localhost:3000
+3. Start frontend by running `npm run dev`
+4. Open http://localhost:3000
 
 #### Demo
 
